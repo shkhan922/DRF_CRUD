@@ -19,52 +19,44 @@ class PlaylistViewSet(ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
 
+    def create_or_update_tracks(self, playlist, tracks_data):
+        for track_data in tracks_data:
+            track, _ = Track.objects.get_or_create(
+                id=track_data['id']
+                
+            )
+            PlaylistTrack.objects.create(playlist=playlist, track=track, sequence_number=track_data['sequence_number'])
+
     def create(self, request, *args, **kwargs):
-        # Extract the tracks data from the request
         tracks_data = request.data.pop('tracks', [])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        playlist = serializer.save()
 
-        # Create the playlist
-        playlist_serializer = self.get_serializer(data=request.data)
-        playlist_serializer.is_valid(raise_exception=True)
-        playlist = playlist_serializer.save()
-
+        # Create or update tracks for the playlist if 'tracks' data is present
         if tracks_data:
-            # Create and associate tracks with the playlist
-            for track_data in tracks_data:
-                # Try to get the track by ID, if not found, create it
-                track_id = track_data.get('id')
-                if track_id:
-                    try:
-                        track = Track.objects.get(pk=track_id)
-                    except Track.DoesNotExist:
-                        return Response(
-                            {"error": f"Track with ID {track_id} does not exist."},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
-                else:
-                    # If 'id' is not provided, try to get the track by name
-                    track_name = track_data.get('name')
-                    try:
-                        track = Track.objects.get(name=track_name)
-                    except Track.DoesNotExist:
-                        return Response(
-                            {"error": f"Track with name {track_name} does not exist."},
-                            status=status.HTTP_400_BAD_REQUEST
-                        )
+            self.create_or_update_tracks(playlist, tracks_data)
 
-                # Creating the PlaylistTrack object
-                playlist_track_data = {
-                    'playlist': playlist.id,
-                    'track': track.id,
-                    'sequence_number': track_data['sequence_number']
-                }
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
 
-                playlist_track_serializer = PlaylistTrackSerializer(data=playlist_track_data)
-                playlist_track_serializer.is_valid(raise_exception=True)
-                playlist_track_serializer.save()
+    def update(self, request, *args, **kwargs):
+        tracks_data = request.data.pop('tracks', [])
+        print("Update worked")
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        playlist = serializer.save()
 
-        headers = self.get_success_headers(playlist_serializer.data)
-        return Response(playlist_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        # Clear existing tracks for the playlist
+        instance.playlisttrack_set.all().delete()
+
+        # Create or update tracks for the playlist if 'tracks' data is present
+        if tracks_data:
+            self.create_or_update_tracks(playlist, tracks_data)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=200, headers=headers)
 
 class PlaylistDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Playlist.objects.all()

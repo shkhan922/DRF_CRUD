@@ -5,7 +5,6 @@ class Track(models.Model):
     name = models.CharField(max_length=255)
     artist_name = models.CharField(max_length=255)
     album_name = models.CharField(max_length=255, null=True, blank=True)
-  
 
     def __str__(self):
         return f"{self.name} by {self.artist_name}"
@@ -19,7 +18,7 @@ class Playlist(models.Model):
         return f"Playlist: {self.playlist_id} - {self.name}"
 
 class PlaylistTrack(models.Model):
-    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE)
+    playlist = models.ForeignKey(Playlist, on_delete=models.CASCADE, null=True)  # Allow null
     track = models.ForeignKey(Track, on_delete=models.CASCADE)
     sequence_number = models.IntegerField()
 
