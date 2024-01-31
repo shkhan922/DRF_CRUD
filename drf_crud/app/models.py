@@ -1,11 +1,11 @@
 # myapp/models.py
 from django.db import models
-
+    
 class Track(models.Model):
     name = models.CharField(max_length=255)
     artist_name = models.CharField(max_length=255)
-    album_name = models.CharField(max_length=255)
-    sequence_number = models.IntegerField()
+    album_name = models.CharField(max_length=255, null=True, blank=True)
+  
 
     def __str__(self):
         return f"{self.name} by {self.artist_name}"

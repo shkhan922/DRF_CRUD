@@ -8,7 +8,7 @@ class PlaylistTrackInline(admin.TabularInline):
 
 @admin.register(Track)
 class TrackAdmin(admin.ModelAdmin):
-    list_display = ['name', 'artist_name', 'album_name', 'sequence_number']
+    list_display = ['name', 'artist_name', 'album_name']
 
 @admin.register(Playlist)
 class PlaylistAdmin(admin.ModelAdmin):

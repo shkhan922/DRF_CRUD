@@ -6,7 +6,7 @@ from .models import Track, Playlist
 # Update TrackAPITestCase
 class TrackAPITestCase(APITestCase):
     def setUp(self):
-        self.track_data = {'name': 'Track 1', 'artist_name': 'Artist 1', 'album_name': 'Album 1', 'sequence_number': 1}
+        self.track_data = {'name': 'Track 1', 'artist_name': 'Artist 1', 'album_name': 'Album 1'}
         self.track = Track.objects.create(**self.track_data)
         self.track_url = f'/api/tracks/{self.track.id}/'
 
