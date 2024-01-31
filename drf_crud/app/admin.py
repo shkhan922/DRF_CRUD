@@ -10,11 +10,6 @@ class PlaylistTrackInline(admin.TabularInline):
 class TrackAdmin(admin.ModelAdmin):
     list_display = ['name', 'artist_name', 'album_name', 'sequence_number']
 
-@admin.register(PlaylistTrack)
-class PlaylistTrackAdmin(admin.ModelAdmin):
-    list_display = ['playlist', 'track', 'sequence_number']
-    list_filter = ['playlist']
-
 @admin.register(Playlist)
 class PlaylistAdmin(admin.ModelAdmin):
     list_display = ['playlist_id', 'name']
