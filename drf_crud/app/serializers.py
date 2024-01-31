@@ -7,10 +7,16 @@ class TrackSerializer(serializers.ModelSerializer):
         model = Track
         fields = '__all__'
 
+# class PlaylistSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Playlist
+#         fields = '__all__'
 class PlaylistSerializer(serializers.ModelSerializer):
+    tracks = TrackSerializer(many=True, read_only=True)
+
     class Meta:
         model = Playlist
-        fields = '__all__'
+        fields = ['id', 'name', 'playlist_id', 'tracks']
 
 class PlaylistTrackSerializer(serializers.ModelSerializer):
     class Meta:

@@ -2,6 +2,7 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.viewsets import ModelViewSet
 from .models import Playlist, Track, PlaylistTrack
 from .serializers import PlaylistSerializer, TrackSerializer, PlaylistTrackSerializer
 
@@ -14,7 +15,7 @@ class TrackDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
 
-class PlaylistListCreateView(generics.ListCreateAPIView):
+class PlaylistViewSet(ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
 
@@ -30,9 +31,27 @@ class PlaylistListCreateView(generics.ListCreateAPIView):
         if tracks_data:
             # Create and associate tracks with the playlist
             for track_data in tracks_data:
-                # Creating the track if it doesn't exist
-                track, created = Track.objects.get_or_create(name=track_data['name'])
-                
+                # Try to get the track by ID, if not found, create it
+                track_id = track_data.get('id')
+                if track_id:
+                    try:
+                        track = Track.objects.get(pk=track_id)
+                    except Track.DoesNotExist:
+                        return Response(
+                            {"error": f"Track with ID {track_id} does not exist."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                else:
+                    # If 'id' is not provided, try to get the track by name
+                    track_name = track_data.get('name')
+                    try:
+                        track = Track.objects.get(name=track_name)
+                    except Track.DoesNotExist:
+                        return Response(
+                            {"error": f"Track with name {track_name} does not exist."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+
                 # Creating the PlaylistTrack object
                 playlist_track_data = {
                     'playlist': playlist.id,
@@ -40,15 +59,12 @@ class PlaylistListCreateView(generics.ListCreateAPIView):
                     'sequence_number': track_data['sequence_number']
                 }
 
-
-
                 playlist_track_serializer = PlaylistTrackSerializer(data=playlist_track_data)
                 playlist_track_serializer.is_valid(raise_exception=True)
                 playlist_track_serializer.save()
 
         headers = self.get_success_headers(playlist_serializer.data)
         return Response(playlist_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
 
 class PlaylistDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Playlist.objects.all()
