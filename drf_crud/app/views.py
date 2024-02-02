@@ -24,19 +24,33 @@ class IsAdminOrReadOnly(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to admin users
-        return request.user and request.user.is_staff
+        return request.user 
+    # and request.user.is_staff
+    
+
+class ReadOnlyForStaffPermission(permissions.BasePermission):
+    """
+    Custom permission to allow read-only access for staff users.
+    """
+    def has_permission(self, request, view):
+        # Allow GET request for all users
+        if request.method == 'GET':
+            return True
+        
+        # Deny permission for POST, PUT, and DELETE requests for staff users
+        return not (request.user and request.user.is_staff)
 
 
 
 class TrackListCreateView(generics.ListCreateAPIView):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [ReadOnlyForStaffPermission]
 
 class TrackDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [ReadOnlyForStaffPermission]
 
 class PlaylistViewSet(ModelViewSet):
     queryset = Playlist.objects.all()
@@ -105,11 +119,14 @@ class PlaylistViewSet(ModelViewSet):
 class PlaylistDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 class PlaylistTrackListView(generics.ListCreateAPIView):
     queryset = PlaylistTrack.objects.all()
     serializer_class = PlaylistTrackSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 class PlaylistTrackDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = PlaylistTrack.objects.all()
     serializer_class = PlaylistTrackSerializer
+    permission_classes = [IsAdminOrReadOnly]
