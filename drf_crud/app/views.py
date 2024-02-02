@@ -1,24 +1,47 @@
 
-from rest_framework import generics
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
+
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from django.db import IntegrityError
 from .models import Playlist, Track, PlaylistTrack
+
+
 from .serializers import PlaylistSerializer, TrackSerializer, PlaylistTrackSerializer
+
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Custom permission to only allow admin users to edit the data.
+    """
+    def has_permission(self, request, view):
+        # Read permissions are allowed to any request
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Write permissions are only allowed to admin users
+        return request.user and request.user.is_staff
+
 
 
 class TrackListCreateView(generics.ListCreateAPIView):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 class TrackDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Track.objects.all()
     serializer_class = TrackSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
 class PlaylistViewSet(ModelViewSet):
     queryset = Playlist.objects.all()
     serializer_class = PlaylistSerializer
+    permission_classes = [IsAdminOrReadOnly]
 
     def create_or_update_tracks(self, playlist, tracks_data):
         for track_data in tracks_data:
